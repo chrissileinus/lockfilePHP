@@ -17,7 +17,7 @@ class Handle
   {
     // Onetime init!
     if (is_string($name) && !self::$file) {
-      self::$file = "/tmp/{$name}.pid";
+      self::$file = "/run/{$name}.pid";
     }
 
     if (file_exists(self::$file)) {
