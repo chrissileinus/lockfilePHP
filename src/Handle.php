@@ -12,12 +12,17 @@ namespace Chrissileinus\LockFile;
 class Handle
 {
   private static $file;
+  private static $path;
 
-  public static function acquire($name = null)
+  public static function acquire($name = null, $path = "/tmp")
   {
+    if (is_string($path) && !self::$path) {
+      self::$path = realpath($path);
+    }
+
     // Onetime init!
     if (is_string($name) && !self::$file) {
-      self::$file = "/run/{$name}.pid";
+      self::$file = $path . DIRECTORY_SEPARATOR . "{$name}.pid";
     }
 
     if (file_exists(self::$file)) {
