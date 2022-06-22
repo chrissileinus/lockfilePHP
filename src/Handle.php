@@ -27,21 +27,24 @@ class Handle
 
     if (file_exists(self::$file)) {
       $pid = file_get_contents(self::$file);
-      $running = posix_kill($pid, 0);
-      if ($running) {
-        throw new LockException(
-          "Could not acquire lock on '" . self::$file . "'. pid: {$pid} is running"
-        );
-      } else {
-        unlink(self::$file);
-      }
-    }
-    $handle = fopen(self::$file, 'x');
-    if (!$handle) {
-      throw new FileException(
-        "Could not open or create lock file '" . self::$file . "'"
+
+      // Check if running with PID
+      if (`ps -p {$pid} -o comm,args=ARGS | grep php | wc -l` > 0) throw new LockException(
+        "Could not acquire lock on '" . self::$file . "'. pid: {$pid} is running"
+      );
+
+      // Try to delete unused lock file
+      if (unlink(self::$file) === false) throw new FileException(
+        "Could not delete unused lock file '" . self::$file . "'"
       );
     }
+
+    // Try to open or create lock file
+    $handle = fopen(self::$file, 'x');
+    if (!$handle) throw new FileException(
+      "Could not open or create lock file '" . self::$file . "'"
+    );
+
     $pid = getmypid();
     fwrite($handle, $pid);
     fclose($handle);
