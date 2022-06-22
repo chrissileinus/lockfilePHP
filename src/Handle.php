@@ -29,8 +29,9 @@ class Handle
       $pid = file_get_contents(self::$file);
 
       // Check if running with PID
-      if (`ps -p {$pid} -o comm,args=ARGS | grep php | wc -l` > 0) throw new LockException(
-        "Could not acquire lock on '" . self::$file . "'. pid: {$pid} is running"
+      $filename = basename($_SERVER["SCRIPT_FILENAME"]);
+      if (preg_match("/.+ (.+)/", `ps -p {$pid} -o comm,user | grep {$filename}`, $matches)) throw new LockException(
+        "Could not acquire lock on '" . self::$file . "'. pid: {$pid} is running in user '{$matches[1]}'"
       );
 
       // Try to delete unused lock file
